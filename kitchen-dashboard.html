@@ -1,0 +1,677 @@
+<!-- Kitchen Compass — Mediterranean meal plan dashboard -->
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+
+#kc-app {
+  --bg: #EDEDE1;
+  --surface: #FBFAF5;
+  --surface-alt: #F2F1E5;
+  --text: #23261F;
+  --text-muted: #6B6F5F;
+  --border: #DAD7C8;
+  --olive: #4B5A32;
+  --olive-dark: #38431F;
+  --olive-light: #E5E9DA;
+  --brick: #A6472A;
+  --brick-light: #F5E2DC;
+  --teal: #2B6E68;
+  --teal-light: #DDEAE8;
+  --gold: #A97A1F;
+  --gold-light: #F3E6CB;
+  font-family: 'Inter', -apple-system, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  border-radius: 14px;
+  padding: 20px;
+  max-width: 880px;
+  margin: 0 auto;
+}
+#kc-app * { box-sizing: border-box; }
+#kc-app h1, #kc-app h2, #kc-app h3, #kc-app .kc-nav-btn, #kc-app .kc-week-btn {
+  font-family: 'Space Grotesk', sans-serif;
+}
+#kc-app .kc-mono { font-family: 'IBM Plex Mono', monospace; }
+#kc-app button { cursor: pointer; font-family: inherit; }
+#kc-header { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+#kc-header h1 { font-size: 22px; font-weight: 600; margin: 0; color: var(--olive-dark); }
+#kc-header p { font-size: 13px; color: var(--text-muted); margin: 4px 0 0; }
+#kc-week-select { display: flex; gap: 6px; }
+.kc-week-btn { padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); font-size: 13px; font-weight: 500; color: var(--text-muted); }
+.kc-week-btn.active { background: var(--olive); color: #fff; border-color: var(--olive); }
+#kc-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 20px; overflow-x: auto; }
+.kc-nav-btn { padding: 10px 16px; background: none; border: none; border-bottom: 2px solid transparent; font-size: 14px; font-weight: 500; color: var(--text-muted); white-space: nowrap; }
+.kc-nav-btn.active { color: var(--olive-dark); border-bottom-color: var(--olive); }
+.kc-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
+.kc-card h3 { font-size: 15px; margin: 0 0 10px; color: var(--olive-dark); }
+.kc-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.kc-grid4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px,1fr)); gap: 10px; }
+.kc-stat { background: var(--surface-alt); border-radius: 10px; padding: 10px 12px; }
+.kc-stat .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .03em; }
+.kc-stat .val { font-family: 'IBM Plex Mono', monospace; font-size: 19px; font-weight: 500; margin-top: 2px; }
+.kc-stat .target { font-size: 11px; color: var(--text-muted); }
+.kc-bar-track { height: 6px; background: var(--border); border-radius: 4px; margin-top: 6px; overflow: hidden; }
+.kc-bar-fill { height: 100%; border-radius: 4px; }
+.kc-meal-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.kc-meal-row:last-child { border-bottom: none; }
+.kc-tag { display: inline-block; font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: .03em; }
+.kc-tag.veg { background: var(--olive-light); color: var(--olive-dark); }
+.kc-tag.fruit { background: var(--gold-light); color: var(--gold); }
+.kc-tag.legume { background: var(--brick-light); color: var(--brick); }
+.kc-tag.grain { background: var(--teal-light); color: var(--teal); }
+.kc-tag.nut, .kc-tag.seed { background: #EDE7F4; color: #5D4B85; }
+.kc-tag.herb { background: #E6EEF5; color: #2E5A82; }
+.kc-check-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+.kc-check-row:last-child { border-bottom: none; }
+.kc-check-row input[type=checkbox] { width: 17px; height: 17px; accent-color: var(--olive); flex-shrink: 0; }
+.kc-check-row.done span.kc-item-name { text-decoration: line-through; color: var(--text-muted); }
+.kc-recipe-detail { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); font-size: 13px; }
+.kc-recipe-detail.open { display: block; }
+.kc-toggle-link { font-size: 12px; color: var(--olive); background: none; border: none; padding: 0; text-decoration: underline; }
+.kc-ing-list { margin: 6px 0; padding-left: 18px; }
+.kc-ing-list li { margin-bottom: 3px; }
+#kc-ring-wrap { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+#kc-ring { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+#kc-ring-inner { width: 90px; height: 90px; border-radius: 50%; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+#kc-ring-inner .n { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 500; }
+#kc-ring-inner .lbl { font-size: 10px; color: var(--text-muted); }
+.kc-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 12px; color: var(--text-muted); }
+.kc-legend span.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
+.kc-form-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.kc-form-row label { font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 3px; }
+.kc-form-row input, .kc-form-row select { padding: 7px 9px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; background: var(--surface-alt); }
+#kc-log-submit { background: var(--olive); color: #fff; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; }
+#kc-log-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+#kc-log-table th { text-align: left; color: var(--text-muted); font-weight: 500; font-size: 11px; text-transform: uppercase; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+#kc-log-table td { padding: 7px 8px; border-bottom: 1px solid var(--border); }
+.kc-empty { color: var(--text-muted); font-size: 13px; padding: 10px 0; }
+.kc-note { font-size: 12px; color: var(--text-muted); margin-top: 8px; line-height: 1.5; }
+#kc-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+@media (max-width: 640px) { #kc-cal-grid { grid-template-columns: repeat(auto-fit, minmax(100px,1fr)); } }
+.kc-cal-day { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 8px; min-height: 90px; }
+.kc-cal-day.sun { background: var(--olive-light); border-color: var(--olive); }
+.kc-cal-day .dname { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 600; color: var(--olive-dark); margin-bottom: 5px; }
+.kc-cal-day .dtask { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+.kc-cal-day .dmins { font-size: 10px; color: var(--olive-dark); font-weight: 600; margin-top: 4px; }
+</style>
+
+<div id="kc-app">
+  <div id="kc-header">
+    <div>
+      <h1>Kitchen Compass</h1>
+      <p>Mediterranean plan · 1,450 kcal target · 30g+ fibre</p>
+    </div>
+    <div id="kc-week-select"></div>
+  </div>
+  <div id="kc-tabs"></div>
+  <div id="kc-content"></div>
+</div>
+
+<script>
+(function(){
+  var TARGET = { kcal: 1450, protein: 100, carbs: 150, fat: 50, fibre: 30 };
+
+  var WEEKS = [
+    { id:1,
+      breakfast:{name:"Overnight oats — berries & walnuts", kcal:410, protein:28, carbs:45, fibre:11, fat:15,
+        ingredients:["Rolled oats 40g","Chia seeds 10g","Unsweetened rice milk 150ml","Vanilla protein powder 20g","Mixed berries 80g","Walnuts, chopped 10g"],
+        method:"Combine oats, chia, rice milk and protein powder in a jar. Top with berries and walnuts. Seal, refrigerate overnight."},
+      lunch:{name:"Chickpea & quinoa bowl — zucchini, capsicum, red onion", kcal:510, protein:20, carbs:66, fibre:14.6, fat:20,
+        ingredients:["Quinoa, cooked 100g","Chickpeas, cooked 100g","Roasted zucchini, capsicum, red onion 150g","Cherry tomato & cucumber 100g","Feta, crumbled 25g","Olive oil 2 tsp","Lemon juice, herbs"],
+        method:"Cook quinoa in salted water/stock. Toss veg with oil, salt, pepper; roast at 220°C for 20-25 min until caramelized (don't overcrowd the tray). Whisk a real dressing (oil, lemon, salt, oregano) rather than drizzling separately. Toss fresh tomato/cucumber with a pinch of salt a few minutes before serving to season them properly."},
+      dinner:{name:"One-pot lentil & vegetable stew", kcal:300, protein:17.5, carbs:47, fibre:17.2, fat:5,
+        ingredients:["Dry lentils 240g (batch of 4)","Diced tomatoes 400g","Carrot, celery, onion 400g","Garlic, cumin, smoked paprika","Olive oil 4 tsp","Baby spinach 200g","Vegetable stock 1L"],
+        method:"Sauté onion/carrot/celery 4-5 min until softened and golden. Add garlic + cumin + smoked paprika, bloom 30-60 sec until fragrant (this fixes the 'raw spice' flatness). Add lentils, tomatoes, stock. Pressure cook 12 min or simmer 25-30 min. Stir in spinach. Taste and season with salt/pepper at the end — lentils need more seasoning than you'd expect. Finish with a squeeze of lemon."},
+      snack:{name:"Hummus & veggie sticks", kcal:150, protein:5.5, carbs:16, fibre:6, fat:7.8},
+      plants:[["Oats","grain"],["Chia seeds","seed"],["Rice (milk)","grain"],["Mixed berries","fruit"],["Walnuts","nut"],["Quinoa","grain"],["Chickpeas","legume"],["Zucchini","veg"],["Capsicum","veg"],["Red onion","veg"],["Cherry tomato","veg"],["Cucumber","veg"],["Lemon","fruit"],["Lentils","legume"],["Canned tomato","veg"],["Carrot","veg"],["Celery","veg"],["Garlic","herb"],["Cumin","herb"],["Smoked paprika","herb"],["Spinach","veg"],["Tahini/sesame","seed"]],
+      grocery:{
+        produce:[["Zucchini","2 medium (~350g)"],["Capsicum","2 (~350g)"],["Red onion","2 (~350g)"],["Cherry tomatoes","700g"],["Cucumber","2 (~500g)"],["Carrot","150g"],["Celery","150g"],["Baby spinach","350g"],["Mixed berries","560g (fresh or frozen)"],["Lemon","2"],["Garlic","1 bulb"]],
+        pantryExtra:[["Quinoa, dry","250g"],["Dry lentils","420g"],["Canned chickpeas","3 cans (400g each)"],["Canned diced tomatoes","2 cans (400g each)"],["Vegetable stock","2L"],["Ground cumin","1 small jar (top up if you have it)"],["Smoked paprika","1 small jar (top up if you have it)"],["Dried oregano","1 small jar (top up if you have it)"]],
+        fridgeExtra:[["Feta cheese","175g (~1 block)"],["Hummus","420g (~2 tubs, if having the snack daily)"]]
+      },
+      prep:{
+        sunday:["Cook a big pot of quinoa in salted water/stock","Roast a tray of zucchini, capsicum & red onion (220°C, 20-25 min)","Batch-cook the lentil stew, scaled to 7 portions","Make 7 overnight oat jars"],
+        weekday:"No cooking. Reheat a portion of stew, assemble the bowl from Sunday's prepped components, grab an oat jar.",
+        weekdayMins:5
+      }
+    },
+    { id:2,
+      breakfast:{name:"Overnight oats — banana & almonds", kcal:415, protein:28, carbs:47, fibre:9, fat:15,
+        ingredients:["Rolled oats 40g","Chia seeds 10g","Unsweetened rice milk 150ml","Vanilla protein powder 20g","Banana, sliced 100g","Almonds, slivered 10g"],
+        method:"Combine oats, chia, rice milk and protein powder in a jar. Top with banana and almonds. Seal, refrigerate overnight."},
+      lunch:{name:"Tuna & cannellini bean salad", kcal:440, protein:35, carbs:32, fibre:8.3, fat:19,
+        ingredients:["Canned tuna in water, drained 100g","Cannellini beans, cooked 100g","Cucumber, tomato, red onion, parsley 150g","Olives, sliced 20g","Olive oil 1 tbsp","Lemon juice, herbs"],
+        method:"Combine all, dress with olive oil and lemon. Trialling this a few weeks — swap for a warm alternative if salads don't stick."},
+      dinner:{name:"Chickpea shakshuka with baked eggs", kcal:525, protein:27, carbs:43, fibre:11.6, fat:26,
+        ingredients:["Chickpeas, cooked 400g (batch of 4)","Eggs 8","Tomato passata 800g","Capsicum, onion 400g","Olive oil 8 tsp","Feta, crumbled 80g","Cumin, paprika, chilli, garlic"],
+        method:"Sauté onion/capsicum 4-5 min until softened and lightly browned. Add garlic + cumin + paprika, bloom 30-60 sec until fragrant. Add tomatoes (crush if whole) + chickpeas, simmer uncovered 10-15 min until thickened — don't rush, a thin sauce tastes flat. Season with salt/pepper before adding eggs. Make wells, crack in 2 eggs per portion, cover, cook 6-10 min until whites set. Top with feta and fresh herbs."},
+      snack:{name:"Small apple & feta", kcal:130, protein:3.2, carbs:22, fibre:3.6, fat:4.2},
+      plants:[["Oats","grain"],["Chia seeds","seed"],["Almond","nut"],["Banana","fruit"],["Cannellini beans","legume"],["Cucumber","veg"],["Cherry tomato","veg"],["Red onion","veg"],["Parsley","herb"],["Olives","veg"],["Lemon","fruit"],["Chickpeas","legume"],["Tomato passata","veg"],["Capsicum","veg"],["Onion","veg"],["Cumin","herb"],["Smoked paprika","herb"],["Chilli","herb"],["Garlic","herb"],["Apple","fruit"]],
+      grocery:{
+        produce:[["Capsicum","2 (~350g)"],["Onion","2 (~350g)"],["Cherry tomatoes","400g"],["Cucumber","2 (~400g)"],["Red onion","150g"],["Parsley","1 bunch"],["Bananas","7"],["Apples","7 (small)"],["Garlic","1 bulb"]],
+        pantryExtra:[["Canned cannellini beans","3 cans (400g each)"],["Canned chickpeas","3 cans (400g each)"],["Almonds, slivered","70g"],["Tomato passata","1.4L (2 bottles/jars)"],["Olives","140g"],["Ground cumin","1 small jar (top up if you have it)"],["Smoked paprika","1 small jar (top up if you have it)"],["Chilli flakes","1 small jar (top up if you have it)"]],
+        fridgeExtra:[["Eggs","14"],["Feta cheese","280g"]]
+      },
+      prep:{
+        sunday:["Batch the chickpea-tomato shakshuka base, sized for 7 portions","Chop salad veg for the week (cucumber, tomato, onion, parsley) and store apart from any dressing","Make 7 overnight oat jars"],
+        weekday:"Real cooking each night: reheat the shakshuka base, crack in 2 fresh eggs, cover and cook ~8 min. Combine tuna salad fresh from Sunday's chopped veg.",
+        weekdayMins:15
+      }
+    },
+    { id:3,
+      breakfast:{name:"Overnight oats — pear & pumpkin seeds", kcal:410, protein:28, carbs:46, fibre:10, fat:14,
+        ingredients:["Rolled oats 40g","Chia seeds 10g","Unsweetened rice milk 150ml","Vanilla protein powder 20g","Pear, chopped 80g","Pumpkin seeds 10g"],
+        method:"Combine oats, chia, rice milk and protein powder in a jar. Top with pear and pumpkin seeds. Seal, refrigerate overnight."},
+      lunch:{name:"Lentil & brown rice bowl — eggplant, tomato, spinach", kcal:510, protein:20, carbs:66, fibre:14.6, fat:20,
+        ingredients:["Brown rice, cooked 100g","Lentils, cooked 100g","Roasted eggplant, cherry tomato 150g","Baby spinach, raw 50g","Feta, crumbled 25g","Olive oil 2 tsp","Lemon juice, herbs"],
+        method:"Cook rice and lentils in salted water/stock. Roast eggplant/tomato with oil, salt, pepper at 220°C until caramelized. Whisk a real dressing (oil, lemon, salt) rather than drizzling separately. Combine with raw spinach, feta, and dressing."},
+      dinner:{name:"Tuna puttanesca wholegrain pasta", kcal:435, protein:32, carbs:34, fibre:6.7, fat:19.5,
+        ingredients:["Wholewheat pasta, cooked 100g","Canned tuna in water, drained 100g","Tomato passata 150g","Olives, sliced 20g","Baby spinach 50g","Olive oil 1 tbsp","Garlic, chilli flakes, capers"],
+        method:"Cook pasta in well-salted water, reserve a splash of pasta water. Sizzle garlic, chilli flakes, capers, olives in oil over low-med heat 2-3 min until fragrant (don't burn the garlic). Add passata, simmer 10-15 min to thicken. Wilt in spinach, fold through tuna at the very end just to warm it (don't overcook). Toss with pasta and a splash of pasta water. Finish with parsley, lemon, pepper."},
+      snack:{name:"Roasted chickpeas", kcal:145, protein:5.8, carbs:18, fibre:4.9, fat:6.2},
+      plants:[["Oats","grain"],["Chia seeds","seed"],["Pear","fruit"],["Pumpkin seeds","seed"],["Brown rice","grain"],["Lentils","legume"],["Eggplant","veg"],["Cherry tomato","veg"],["Baby spinach","veg"],["Lemon","fruit"],["Wholewheat pasta","grain"],["Tomato passata","veg"],["Olives","veg"],["Garlic","herb"],["Chilli flakes","herb"],["Capers","herb"],["Chickpeas","legume"]],
+      grocery:{
+        produce:[["Pears","7"],["Eggplant","2 large (~700g)"],["Cherry tomatoes","400g"],["Baby spinach","700g"],["Lemon","2"],["Garlic","1 bulb"]],
+        pantryExtra:[["Brown rice, dry","250g"],["Dry lentils","280g"],["Wholewheat pasta","500g pack"],["Pumpkin seeds","70g"],["Olives","140g"],["Capers","1 small jar (~30g)"],["Canned chickpeas","2 cans (400g each)"],["Tomato passata","1L"],["Chilli flakes","1 small jar (top up if you have it)"]],
+        fridgeExtra:[["Feta cheese","175g"]]
+      },
+      prep:{
+        sunday:["Cook a big batch of brown rice and lentils in salted water/stock","Roast a tray of eggplant & cherry tomato (220°C, 20-25 min)","Batch the puttanesca sauce base (garlic, chilli, olives, capers, passata) — don't add tuna or pasta yet","Make 7 overnight oat jars"],
+        weekday:"Real cooking each night: boil fresh pasta (8-10 min), reheat the sauce, fold through tuna at the end, toss together. Bowl lunch needs no cooking — just assemble from Sunday's components.",
+        weekdayMins:15
+      }
+    },
+    { id:4,
+      breakfast:{name:"Overnight oats — mango & pistachios", kcal:415, protein:28, carbs:48, fibre:9, fat:15,
+        ingredients:["Rolled oats 40g","Chia seeds 10g","Unsweetened rice milk 150ml","Vanilla protein powder 20g","Mango, diced 80g","Pistachios, chopped 10g"],
+        method:"Combine oats, chia, rice milk and protein powder in a jar. Top with mango and pistachios. Seal, refrigerate overnight."},
+      lunch:{name:"Tuna & black bean salad", kcal:440, protein:35, carbs:32, fibre:8.3, fat:19,
+        ingredients:["Canned tuna in water, drained 100g","Black beans, cooked 100g","Cucumber, tomato, red onion, parsley 150g","Olives, sliced 20g","Olive oil 1 tbsp","Lemon juice, herbs"],
+        method:"Combine all, dress with olive oil and lemon."},
+      dinner:{name:"Freezer soup + boiled egg", kcal:393, protein:20, carbs:51.6, fibre:14.6, fat:11.7,
+        ingredients:["Moroccan-spiced chickpea & lentil freezer soup (1 portion)","Boiled egg 1"],
+        method:"Pull a portion from the monthly freezer batch, reheat, serve with a boiled egg on the side for extra protein."},
+      snack:{name:"Hummus & veggie sticks", kcal:150, protein:5.5, carbs:16, fibre:6, fat:7.8},
+      plants:[["Oats","grain"],["Chia seeds","seed"],["Mango","fruit"],["Pistachios","nut"],["Black beans","legume"],["Cucumber","veg"],["Cherry tomato","veg"],["Red onion","veg"],["Parsley","herb"],["Olives","veg"],["Lemon","fruit"],["Carrot","veg"],["Sweet potato","veg"],["Onion","veg"],["Cumin","herb"],["Cinnamon","herb"],["Ginger","herb"],["Garlic","herb"],["Chickpeas","legume"],["Lentils","legume"]],
+      grocery:{
+        produce:[["Cucumber","4-5 (~1kg, for salad + snack sticks)"],["Cherry tomatoes","400g"],["Red onion","150g"],["Parsley","1 bunch"],["Mango","560g (fresh or frozen)"],["Carrot","400g (snack sticks)"],["Capsicum","300g (snack sticks)"],["Garlic","1 bulb (only if restocking freezer soup)"]],
+        pantryExtra:[["Canned black beans","3 cans (400g each)"],["Pistachios, chopped","70g"],["Ground cumin","only if restocking freezer soup"],["Ground cinnamon","only if restocking freezer soup"],["Ground ginger","only if restocking freezer soup"]],
+        fridgeExtra:[["Eggs","7"],["Hummus","420g (~2 tubs)"]]
+      },
+      prep:{
+        sunday:["Boil 7 eggs, refrigerate","Chop salad veg for the week (cucumber, tomato, onion, parsley)","Make 7 overnight oat jars","If the freezer stash is running low: this is the week to batch-cook the Moroccan-spiced freezer soup (10 portions, ~2-3 hrs) — dinner needs no other prep this week, so the time is there"],
+        weekday:"No cooking. Reheat a freezer soup portion, add a boiled egg from Sunday, combine tuna salad fresh.",
+        weekdayMins:10
+      }
+    }
+  ];
+
+  var STATIC_GROCERY = {
+    pantry: [["Rolled oats","280g"],["Chia seeds","70g"],["Vanilla protein powder","140g"],["Olive oil","~150-200ml (top up bottle)"],["Salt","top up as needed"],["Black pepper","top up as needed"]],
+    fridge: [["Unsweetened rice milk","1L"]]
+  };
+
+  var CAT_LABEL = { veg:"Veg", fruit:"Fruit", legume:"Legume", grain:"Grain", nut:"Nut", seed:"Seed", herb:"Herb/spice" };
+  var CAT_COLOR = { veg:"#4B5A32", fruit:"#A97A1F", legume:"#A6472A", grain:"#2B6E68", nut:"#5D4B85", seed:"#5D4B85", herb:"#2E5A82" };
+
+  var state = { week: 1, tab: "overview", grocery: {}, plants: {}, log: [] };
+
+  function mealTotal(w){
+    var m=[w.breakfast,w.lunch,w.dinner,w.snack], t={kcal:0,protein:0,carbs:0,fibre:0,fat:0};
+    m.forEach(function(x){ t.kcal+=x.kcal; t.protein+=x.protein; t.carbs+=x.carbs; t.fibre+=x.fibre; t.fat+=x.fat; });
+    return t;
+  }
+
+  function storageGet(key){
+    if (window.storage) {
+      return window.storage.get(key, false).catch(function(){ return null; });
+    }
+    try {
+      var v = localStorage.getItem(key);
+      return Promise.resolve(v !== null ? { key: key, value: v } : null);
+    } catch (e) { return Promise.resolve(null); }
+  }
+  function storageSet(key, value){
+    if (window.storage) {
+      return window.storage.set(key, value, false).catch(function(){ return null; });
+    }
+    try { localStorage.setItem(key, value); } catch (e) {}
+    return Promise.resolve({ key: key, value: value });
+  }
+
+  function loadStorage(cb){
+    var pending = 3;
+    function done(){ pending--; if(pending<=0) cb(); }
+    storageGet('kc-grocery').then(function(r){ if(r && r.value) state.grocery = JSON.parse(r.value); }).then(done);
+    storageGet('kc-plants').then(function(r){ if(r && r.value) state.plants = JSON.parse(r.value); }).then(done);
+    storageGet('kc-log').then(function(r){ if(r && r.value) state.log = JSON.parse(r.value); }).then(done);
+  }
+  function saveGrocery(){ storageSet('kc-grocery', JSON.stringify(state.grocery)); }
+  function savePlants(){ storageSet('kc-plants', JSON.stringify(state.plants)); }
+  function saveLog(){ storageSet('kc-log', JSON.stringify(state.log)); }
+
+  function currentWeek(){ return WEEKS[state.week-1]; }
+
+  function renderWeekSelect(){
+    var el = document.getElementById('kc-week-select');
+    el.innerHTML = '';
+    for(var i=1;i<=4;i++){
+      var b = document.createElement('button');
+      b.className = 'kc-week-btn' + (state.week===i?' active':'');
+      b.textContent = 'Week ' + i;
+      b.onclick = (function(n){ return function(){ state.week=n; renderAll(); }; })(i);
+      el.appendChild(b);
+    }
+  }
+
+  var TABS = [["overview","Overview"],["week","This week"],["calendar","Calendar"],["grocery","Grocery"],["plants","Plants"],["log","Log"]];
+  function renderTabs(){
+    var el = document.getElementById('kc-tabs');
+    el.innerHTML = '';
+    TABS.forEach(function(t){
+      var b = document.createElement('button');
+      b.className = 'kc-nav-btn' + (state.tab===t[0]?' active':'');
+      b.textContent = t[1];
+      b.onclick = function(id){ return function(){ state.tab=id; renderAll(); }; }(t[0]);
+      el.appendChild(b);
+    });
+  }
+
+  function bar(label, val, target, unit, color){
+    var pct = Math.min(100, Math.round((val/target)*100));
+    var under = val < target*0.85;
+    return '<div class="kc-stat"><div class="label">'+label+'</div>' +
+      '<div class="val kc-mono">'+ (Math.round(val*10)/10) + unit +'</div>' +
+      '<div class="target">of '+target+unit+' target'+(under?' · top up if hungry':'')+'</div>' +
+      '<div class="kc-bar-track"><div class="kc-bar-fill" style="width:'+pct+'%;background:'+color+'"></div></div></div>';
+  }
+
+  function renderOverview(){
+    var w = currentWeek(), t = mealTotal(w);
+    var html = '<div class="kc-card"><h3>Week '+w.id+' daily totals (breakfast + lunch + dinner + snack)</h3>' +
+      '<div class="kc-grid4">' +
+      bar('Calories', t.kcal, TARGET.kcal, '', '#4B5A32') +
+      bar('Protein', t.protein, TARGET.protein, 'g', '#A6472A') +
+      bar('Carbs', t.carbs, TARGET.carbs, 'g', '#2B6E68') +
+      bar('Fibre', t.fibre, TARGET.fibre, 'g', '#A97A1F') +
+      '</div></div>';
+
+    html += '<div class="kc-card"><h3>Today\'s lineup</h3>';
+    [['Breakfast', w.breakfast], ['Lunch', w.lunch], ['Dinner', w.dinner], ['Snack', w.snack]].forEach(function(pair){
+      html += '<div class="kc-meal-row"><span><strong>'+pair[0]+':</strong> '+pair[1].name+'</span><span class="kc-mono" style="color:var(--text-muted)">'+pair[1].kcal+' kcal</span></div>';
+    });
+    html += '<p class="kc-note">Full ingredients and method are under the "This week" tab. Same meals repeat daily this week — Sunday is the only real cook day.</p></div>';
+
+    var checked = state.plants[w.id] || {};
+    var count = Object.keys(checked).filter(function(k){return checked[k];}).length;
+    html += '<div class="kc-card"><h3>Plant diversity this week</h3><div id="kc-ring-wrap">' +
+      ringSvg(count, w.plants.length) +
+      '<div><p style="margin:0 0 6px;font-size:13px;">'+count+' of '+w.plants.length+' plants logged this week (goal: 30 across all categories — see Plants tab)</p>' +
+      '<p class="kc-note" style="margin:0">Aspirational, not a rule — check items off as you eat them.</p></div></div></div>';
+
+    document.getElementById('kc-content').innerHTML = html;
+  }
+
+  function ringSvg(count, total){
+    var pct = Math.min(100, Math.round((count/30)*100));
+    var deg = pct*3.6;
+    return '<div id="kc-ring" style="background:conic-gradient(#4B5A32 '+deg+'deg, #DAD7C8 0deg)">' +
+      '<div id="kc-ring-inner"><div class="n">'+count+'</div><div class="lbl">of 30</div></div></div>';
+  }
+
+  function recipeCard(title, meal, badge){
+    var id = 'r-' + title.replace(/\s+/g,'-');
+    var html = '<div class="kc-card"><h3>'+title+(badge?' <span class="kc-tag veg" style="margin-left:6px">'+badge+'</span>':'')+'</h3>' +
+      '<div class="kc-meal-row" style="border:none;padding-top:0"><strong>'+meal.name+'</strong>' +
+      '<span class="kc-mono" style="color:var(--text-muted)">'+meal.kcal+' kcal</span></div>' +
+      '<div class="kc-grid4" style="margin-top:8px">' +
+      '<div class="kc-stat"><div class="label">Protein</div><div class="val kc-mono" style="font-size:15px">'+meal.protein+'g</div></div>' +
+      '<div class="kc-stat"><div class="label">Carbs</div><div class="val kc-mono" style="font-size:15px">'+meal.carbs+'g</div></div>' +
+      '<div class="kc-stat"><div class="label">Fibre</div><div class="val kc-mono" style="font-size:15px">'+meal.fibre+'g</div></div>' +
+      '<div class="kc-stat"><div class="label">Fat</div><div class="val kc-mono" style="font-size:15px">'+meal.fat+'g</div></div>' +
+      '</div>' +
+      '<button class="kc-toggle-link" style="margin-top:10px" onclick="document.getElementById(\''+id+'\').classList.toggle(\'open\')">Show ingredients & method</button>' +
+      '<div class="kc-recipe-detail" id="'+id+'">' +
+      (meal.ingredients ? '<ul class="kc-ing-list">'+meal.ingredients.map(function(i){return '<li>'+i+'</li>';}).join('')+'</ul>' : '') +
+      (meal.method ? '<p style="margin:6px 0 0">'+meal.method+'</p>' : '') +
+      '</div></div>';
+    return html;
+  }
+
+  function renderWeekTab(){
+    var w = currentWeek();
+    var html = recipeCard('Breakfast', w.breakfast) +
+      recipeCard('Lunch', w.lunch, w.id===2||w.id===4?'tuna':null) +
+      recipeCard('Dinner', w.dinner) +
+      '<div class="kc-card"><h3>Snack (optional, ~3pm)</h3>' +
+      '<div class="kc-meal-row" style="border:none;padding-top:0"><strong>'+w.snack.name+'</strong><span class="kc-mono" style="color:var(--text-muted)">'+w.snack.kcal+' kcal · '+w.snack.protein+'g protein · '+w.snack.fibre+'g fibre</span></div></div>';
+    document.getElementById('kc-content').innerHTML = html;
+  }
+
+  var DAY_NAMES = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+  function renderCalendar(){
+    var w = currentWeek();
+    var html = '<div class="kc-card"><h3>Week '+w.id+' cooking calendar</h3>' +
+      '<p class="kc-note" style="margin-top:0">Sunday is the big cook day. Everything else is quick reheating and assembly'+(w.prep.weekdayMins>=15?', with a bit of real cooking each night for this particular week':'')+'.</p>' +
+      '<div id="kc-cal-grid">';
+    DAY_NAMES.forEach(function(d, idx){
+      var isSun = idx === 0;
+      html += '<div class="kc-cal-day'+(isSun?' sun':'')+'"><div class="dname">'+d+'</div>';
+      if (isSun) {
+        html += '<div class="dtask"><ul style="margin:0;padding-left:14px">' + w.prep.sunday.map(function(t){return '<li style="margin-bottom:4px">'+t+'</li>';}).join('') + '</ul></div>';
+      } else {
+        html += '<div class="dtask">'+w.prep.weekday+'</div><div class="dmins">~'+w.prep.weekdayMins+' min</div>';
+      }
+      html += '</div>';
+    });
+    html += '</div></div>';
+
+    html += '<div class="kc-card"><h3>Why it\'s split this way</h3>' +
+      '<p style="font-size:13px;margin:0 0 8px">'+
+      (w.id===1 ? "This week's dinner (lentil stew) and lunch (chickpea quinoa bowl) both reheat and assemble cleanly from Sunday's batch — so Monday to Saturday need essentially zero cooking." :
+       w.id===2 ? "The shakshuka base batches fine, but eggs don't reheat well — so you're cracking 2 fresh eggs into the reheated base each night. It's short (about 8 minutes) but it is real, active cooking, not just reheating." :
+       w.id===3 ? "The puttanesca sauce batches, but pasta has to be cooked fresh each time it's eaten, or it turns to mush in the fridge — so there's a genuine ~10-minute cooking step most nights." :
+       "Dinner comes straight from the freezer batch, so this week is the lightest on daily effort. It's also why Sunday is a good day to restock the freezer soup if you're running low — the rest of the day's cooking is minimal, so there's room for a longer batch session.") +
+      '</p></div>';
+
+    document.getElementById('kc-content').innerHTML = html;
+  }
+
+  function renderGrocery(){
+    var w = currentWeek();
+    var groups = [
+      ["This week's produce", w.grocery.produce, 'produce'],
+      ["This week's pantry additions", w.grocery.pantryExtra, 'pantryExtra'],
+      ["This week's fridge additions", w.grocery.fridgeExtra || [], 'fridgeExtra'],
+      ["Recurring pantry staples (same every week)", STATIC_GROCERY.pantry, 'staticPantry'],
+      ["Recurring fridge staples (same every week)", STATIC_GROCERY.fridge, 'staticFridge']
+    ];
+    var checked = state.grocery[w.id] || {};
+    var html = '';
+    groups.forEach(function(g){
+      if (!g[1] || !g[1].length) return;
+      html += '<div class="kc-card"><h3>'+g[0]+'</h3>';
+      g[1].forEach(function(item, idx){
+        var key = g[2]+'-'+idx;
+        var isChecked = !!checked[key];
+        var name = item[0], qty = item[1];
+        html += '<div class="kc-check-row'+(isChecked?' done':'')+'"><input type="checkbox" data-key="'+key+'" '+(isChecked?'checked':'')+' onchange="kcToggleGrocery(this)">' +
+          '<span class="kc-item-name">'+name+'</span>' +
+          '<span class="kc-mono" style="margin-left:auto;color:var(--text-muted);font-size:12px">'+qty+'</span></div>';
+      });
+      html += '</div>';
+    });
+    html += '<p class="kc-note">Quantities assume eating that meal every day for 7 days, per your "same food daily" setup — halve everything if you split a week between two recipes instead.</p>';
+    document.getElementById('kc-content').innerHTML = html;
+  }
+  window.kcToggleGrocery = function(el){
+    var w = currentWeek();
+    if(!state.grocery[w.id]) state.grocery[w.id] = {};
+    state.grocery[w.id][el.getAttribute('data-key')] = el.checked;
+    el.closest('.kc-check-row').classList.toggle('done', el.checked);
+    saveGrocery();
+  };
+
+  function renderPlants(){
+    var w = currentWeek();
+    var checked = state.plants[w.id] || {};
+    var count = Object.keys(checked).filter(function(k){return checked[k];}).length;
+    var byCat = {};
+    w.plants.forEach(function(p){ (byCat[p[1]] = byCat[p[1]] || []).push(p[0]); });
+
+    var html = '<div class="kc-card"><div id="kc-ring-wrap">' + ringSvg(count, 30) +
+      '<div><p style="margin:0 0 8px;font-size:13px">'+count+' of 30 plant foods logged this week</p>' +
+      '<div class="kc-legend">' + Object.keys(CAT_LABEL).map(function(c){
+        return '<span><span class="dot" style="background:'+CAT_COLOR[c]+'"></span>'+CAT_LABEL[c]+'</span>';
+      }).join('') + '</div></div></div></div>';
+
+    html += '<div class="kc-card"><h3>This week\'s plants — check off as you eat them</h3>';
+    w.plants.forEach(function(p, idx){
+      var key = 'p-'+idx;
+      var isChecked = !!checked[key];
+      html += '<div class="kc-check-row'+(isChecked?' done':'')+'"><input type="checkbox" data-key="'+key+'" '+(isChecked?'checked':'')+' onchange="kcTogglePlant(this)">' +
+        '<span class="kc-item-name">'+p[0]+'</span><span class="kc-tag '+p[1]+'" style="margin-left:auto">'+CAT_LABEL[p[1]]+'</span></div>';
+    });
+    html += '<p class="kc-note">Want to close the gap to 30? Add a second herb or spice to whatever you\'re already cooking, use a frozen mixed-veg bag some weeks, or sprinkle extra seeds over the bowl — small additions count just as much as a new ingredient.</p></div>';
+
+    document.getElementById('kc-content').innerHTML = html;
+  }
+  window.kcTogglePlant = function(el){
+    var w = currentWeek();
+    if(!state.plants[w.id]) state.plants[w.id] = {};
+    state.plants[w.id][el.getAttribute('data-key')] = el.checked;
+    el.closest('.kc-check-row').classList.toggle('done', el.checked);
+    savePlants();
+    renderPlants();
+  };
+
+  function renderLog(){
+    var today = new Date().toISOString().slice(0,10);
+    var html = '<div class="kc-card"><h3>Add today\'s entry</h3>' +
+      '<div class="kc-form-row">' +
+      '<div><label>Date</label><input type="date" id="kc-log-date" value="'+today+'"></div>' +
+      '<div><label>Weight (kg)</label><input type="number" step="0.1" id="kc-log-weight" placeholder="65.8" style="width:90px"></div>' +
+      '<div><label>Stuck to plan?</label><select id="kc-log-adherence"><option>On track</option><option>Partially</option><option>Off plan</option></select></div>' +
+      '<div><label>Exercise (min)</label><input type="number" id="kc-log-exercise" placeholder="0" style="width:80px"></div>' +
+      '</div>' +
+      '<div class="kc-form-row"><div style="flex:1"><label>Notes (optional)</label><input type="text" id="kc-log-notes" placeholder="How the week felt, energy levels, etc." style="width:100%"></div></div>' +
+      '<button id="kc-log-submit" onclick="kcAddLog()">Save entry</button>' +
+      '<p class="kc-note">No direct MyFitnessPal sync is available — MFP\'s API is partner-only. Copy your weight and any notes over here in a few seconds each day; it keeps a running trend without needing the integration.</p>' +
+      '</div>';
+
+    html += '<div class="kc-card"><h3>Import from Cronometer</h3>' +
+      '<div class="kc-form-row">' +
+      '<div><label>Daily nutrition export (.csv)</label><input type="file" accept=".csv" onchange="kcImportNutrition(this)"></div>' +
+      '<div><label>Biometrics export (.csv)</label><input type="file" accept=".csv" onchange="kcImportBiometrics(this)"></div>' +
+      '</div>' +
+      '<p class="kc-note">In Cronometer, use Settings → Export Data to download these two files, then upload them here. Nutrition figures fill in against your targets below; biometrics fill in the weight trend. Imported values merge with entries you\'ve already logged manually — nothing gets overwritten except matching fields for the same date. Column names are matched loosely (e.g. any header containing "energy" or "calorie"), so slightly different export formats should still work; if a file doesn\'t import, its columns may be named differently than expected.</p>' +
+      '</div>';
+
+    var sorted = state.log.slice().sort(function(a,b){ return a.date < b.date ? 1 : -1; });
+    var last7 = sorted.slice(0,7);
+    var onTrack = last7.filter(function(e){ return e.adherence==='On track'; }).length;
+    var adherencePct = last7.length ? Math.round((onTrack/last7.length)*100) : null;
+
+    html += '<div class="kc-card"><h3>Trends</h3><div class="kc-grid2">';
+    html += '<div class="kc-stat"><div class="label">Adherence (last 7 logged)</div><div class="val kc-mono">'+(adherencePct===null?'—':adherencePct+'%')+'</div></div>';
+    html += '<div class="kc-stat"><div class="label">Entries logged</div><div class="val kc-mono">'+state.log.length+'</div></div>';
+    html += '</div>';
+
+    var withNutrition = last7.filter(function(e){ return e.kcalActual !== undefined; });
+    if (withNutrition.length) {
+      var avg = function(field){ var vals = withNutrition.filter(function(e){return e[field]!==undefined;}).map(function(e){return e[field];}); return vals.length ? vals.reduce(function(a,b){return a+b;},0)/vals.length : null; };
+      var avgKcal = avg('kcalActual'), avgProtein = avg('proteinActual'), avgFibre = avg('fibreActual');
+      html += '<h3 style="margin-top:14px">Actual vs target (avg of last '+withNutrition.length+' imported days)</h3><div class="kc-grid4">';
+      if (avgKcal!==null) html += bar('Avg calories', avgKcal, TARGET.kcal, '', '#4B5A32');
+      if (avgProtein!==null) html += bar('Avg protein', avgProtein, TARGET.protein, 'g', '#A6472A');
+      if (avgFibre!==null) html += bar('Avg fibre', avgFibre, TARGET.fibre, 'g', '#A97A1F');
+      html += '</div>';
+    }
+    if (sorted.filter(function(e){return e.weight;}).length >= 2) {
+      html += weightChart(sorted.filter(function(e){return e.weight;}));
+    }
+    html += '</div>';
+
+    html += '<div class="kc-card"><h3>Log history</h3>';
+    if (!sorted.length) {
+      html += '<p class="kc-empty">No entries yet — add your first one above.</p>';
+    } else {
+      html += '<table id="kc-log-table"><thead><tr><th>Date</th><th>Weight</th><th>Adherence</th><th>Exercise</th><th>Kcal (actual)</th><th>Protein (actual)</th><th>Notes</th></tr></thead><tbody>';
+      sorted.forEach(function(e){
+        html += '<tr><td>'+e.date+'</td><td>'+(e.weight||'—')+'</td><td>'+(e.adherence||'—')+'</td><td>'+(e.exercise||'0')+' min</td><td>'+(e.kcalActual!==undefined?Math.round(e.kcalActual):'—')+'</td><td>'+(e.proteinActual!==undefined?Math.round(e.proteinActual)+'g':'—')+'</td><td>'+(e.notes||'')+'</td></tr>';
+      });
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+
+    document.getElementById('kc-content').innerHTML = html;
+  }
+
+  function weightChart(entries){
+    var chrono = entries.slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+    var weights = chrono.map(function(e){ return parseFloat(e.weight); });
+    var min = Math.min.apply(null, weights) - 0.5, max = Math.max.apply(null, weights) + 0.5;
+    var w = 600, h = 140, pad = 20;
+    var pts = chrono.map(function(e, i){
+      var x = pad + (i/(chrono.length-1||1)) * (w - pad*2);
+      var y = h - pad - ((parseFloat(e.weight) - min)/(max-min || 1)) * (h - pad*2);
+      return x + ',' + y;
+    }).join(' ');
+    var svg = '<svg width="100%" viewBox="0 0 '+w+' '+h+'" style="margin-top:8px">' +
+      '<polyline points="'+pts+'" fill="none" stroke="#4B5A32" stroke-width="2"/>';
+    chrono.forEach(function(e, i){
+      var x = pad + (i/(chrono.length-1||1)) * (w - pad*2);
+      var y = h - pad - ((parseFloat(e.weight) - min)/(max-min || 1)) * (h - pad*2);
+      svg += '<circle cx="'+x+'" cy="'+y+'" r="3" fill="#4B5A32"/>';
+    });
+    svg += '</svg><p class="kc-note">Weight trend across logged entries ('+chrono[0].date+' to '+chrono[chrono.length-1].date+')</p>';
+    return svg;
+  }
+
+  function splitCSVLine(line){
+    var result = [], cur = '', inQuotes = false;
+    for (var i=0; i<line.length; i++){
+      var ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i+1] === '"') { cur += '"'; i++; } else { inQuotes = !inQuotes; }
+      } else if (ch === ',' && !inQuotes) { result.push(cur); cur = ''; }
+      else { cur += ch; }
+    }
+    result.push(cur);
+    return result;
+  }
+  function parseCSV(text){
+    var lines = text.split(/\r\n|\n/).filter(function(l){ return l.trim().length; });
+    if (!lines.length) return [];
+    var headers = splitCSVLine(lines[0]).map(function(h){ return h.trim(); });
+    var rows = [];
+    for (var i=1; i<lines.length; i++){
+      var cols = splitCSVLine(lines[i]);
+      var obj = {};
+      headers.forEach(function(h, idx){ obj[h] = (cols[idx]||'').trim(); });
+      rows.push(obj);
+    }
+    return rows;
+  }
+  function findKey(headers, patterns){
+    for (var p=0; p<patterns.length; p++){
+      for (var i=0; i<headers.length; i++){
+        if (headers[i].toLowerCase().indexOf(patterns[p]) !== -1) return headers[i];
+      }
+    }
+    return null;
+  }
+  function normalizeDate(str){
+    var d = new Date(str);
+    if (!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+    return str;
+  }
+  function upsertLogEntry(date, patch){
+    var existing = state.log.filter(function(e){ return e.date === date; })[0];
+    if (existing) {
+      Object.keys(patch).forEach(function(k){ if (patch[k] !== undefined && !isNaN(patch[k])) existing[k] = patch[k]; });
+    } else {
+      var obj = { date: date };
+      Object.keys(patch).forEach(function(k){ if (patch[k] !== undefined && !isNaN(patch[k])) obj[k] = patch[k]; });
+      state.log.push(obj);
+    }
+  }
+
+  window.kcImportNutrition = function(input){
+    var file = input.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var rows = parseCSV(e.target.result);
+      if (!rows.length) { alert('No rows found in that file.'); return; }
+      var headers = Object.keys(rows[0]);
+      var dateKey = findKey(headers, ['date','day']);
+      var kcalKey = findKey(headers, ['energy','calorie','kcal']);
+      var proteinKey = findKey(headers, ['protein']);
+      var carbsKey = findKey(headers, ['carb']);
+      var fatKey = findKey(headers, ['fat']);
+      var fibreKey = findKey(headers, ['fiber','fibre']);
+      if (!dateKey) { alert('Could not find a date column in that file.'); return; }
+      var count = 0;
+      rows.forEach(function(r){
+        if (!r[dateKey]) return;
+        var date = normalizeDate(r[dateKey]);
+        upsertLogEntry(date, {
+          kcalActual: kcalKey ? parseFloat(r[kcalKey]) : undefined,
+          proteinActual: proteinKey ? parseFloat(r[proteinKey]) : undefined,
+          carbsActual: carbsKey ? parseFloat(r[carbsKey]) : undefined,
+          fatActual: fatKey ? parseFloat(r[fatKey]) : undefined,
+          fibreActual: fibreKey ? parseFloat(r[fibreKey]) : undefined
+        });
+        count++;
+      });
+      saveLog();
+      renderLog();
+      alert('Imported nutrition data for ' + count + ' day(s).');
+    };
+    reader.readAsText(file);
+  };
+
+  window.kcImportBiometrics = function(input){
+    var file = input.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var rows = parseCSV(e.target.result);
+      if (!rows.length) { alert('No rows found in that file.'); return; }
+      var headers = Object.keys(rows[0]);
+      var dateKey = findKey(headers, ['date','day']);
+      var metricKey = findKey(headers, ['metric']);
+      var amountKey = findKey(headers, ['amount','value']);
+      var weightKey = findKey(headers, ['weight']);
+      if (!dateKey) { alert('Could not find a date column in that file.'); return; }
+      var count = 0;
+      rows.forEach(function(r){
+        if (!r[dateKey]) return;
+        var date = normalizeDate(r[dateKey]);
+        var w = null;
+        if (metricKey && amountKey && r[metricKey] && r[metricKey].toLowerCase().indexOf('weight') !== -1) {
+          w = parseFloat(r[amountKey]);
+        } else if (weightKey && r[weightKey]) {
+          w = parseFloat(r[weightKey]);
+        }
+        if (w !== null && !isNaN(w)) { upsertLogEntry(date, { weight: w }); count++; }
+      });
+      saveLog();
+      renderLog();
+      alert('Imported weight data for ' + count + ' day(s).');
+    };
+    reader.readAsText(file);
+  };
+
+  window.kcAddLog = function(){
+    var date = document.getElementById('kc-log-date').value;
+    var weight = document.getElementById('kc-log-weight').value;
+    var adherence = document.getElementById('kc-log-adherence').value;
+    var exercise = document.getElementById('kc-log-exercise').value;
+    var notes = document.getElementById('kc-log-notes').value;
+    if (!date) return;
+    upsertLogEntry(date, { weight: weight ? parseFloat(weight) : undefined });
+    var existing = state.log.filter(function(e){ return e.date === date; })[0];
+    existing.adherence = adherence;
+    existing.exercise = exercise;
+    existing.notes = notes;
+    if (weight === '') delete existing.weight;
+    saveLog();
+    renderLog();
+  };
+
+  function renderAll(){
+    renderWeekSelect();
+    renderTabs();
+    if (state.tab === 'overview') renderOverview();
+    else if (state.tab === 'week') renderWeekTab();
+    else if (state.tab === 'calendar') renderCalendar();
+    else if (state.tab === 'grocery') renderGrocery();
+    else if (state.tab === 'plants') renderPlants();
+    else if (state.tab === 'log') renderLog();
+  }
+
+  loadStorage(renderAll);
+})();
+</script>
